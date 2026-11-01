@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0-android</TargetFramework>
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>DailyTrack</RootNamespace>
+
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<MauiXamlInflator>SourceGen</MauiXamlInflator>
+
+		<!-- Application details -->
+		<ApplicationTitle>DailyTrack</ApplicationTitle>
+		<ApplicationId>com.companyname.dailytrack</ApplicationId>
+		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationVersion>1</ApplicationVersion>
+
+		<!-- Android minimum version -->
+		<SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Custom app icon -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg"
+				  ForegroundFile="Resources\AppIcon\appiconfg.svg"
+				  Color="#512BD4" />
+
+		<!-- Splash screen -->
+		<MauiSplashScreen Include="Resources\Splash\splash.svg"
+						  Color="#512BD4"
+						  BaseSize="128,128" />
+
+		<!-- Images -->
+		<MauiImage Include="Resources\Images\*" />
+		<MauiImage Update="Resources\Images\dotnet_bot.png"
+				   Resize="True"
+				   BaseSize="300,185" />
+
+		<!-- Fonts -->
+		<MauiFont Include="Resources\Fonts\*" />
+
+		<!-- Raw assets -->
+		<MauiAsset Include="Resources\Raw\**"
+				   LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- MAUI controls -->
+		<PackageReference Include="Microsoft.Maui.Controls"
+						  Version="$(MauiVersion)" />
+
+		<!-- Debug logging -->
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug"
+						  Version="10.0.0" />
+
+		<!-- SQLite database -->
+		<PackageReference Include="sqlite-net-pcl"
+						  Version="1.11.285" />
+	</ItemGroup>
+
+</Project>
