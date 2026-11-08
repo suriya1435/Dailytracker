@@ -1,5 +1,4 @@
-﻿
-<ContentPage
+﻿<ContentPage
     x:Class="DailyTrack.MainPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -142,6 +141,7 @@
                 FontAttributes="Bold"
                 TextColor="#172033" />
 
+			<!-- Add Expense -->
 			<Button
                 x:Name="AddExpenseButton"
                 Text="+ Add Expense"
@@ -152,6 +152,7 @@
                 FontAttributes="Bold"
                 Clicked="OnAddExpenseClicked" />
 
+			<!-- Add Income -->
 			<Button
                 x:Name="AddIncomeButton"
                 Text="+ Add Income"
@@ -161,6 +162,18 @@
                 HeightRequest="55"
                 FontAttributes="Bold"
                 Clicked="OnAddIncomeClicked" />
+
+			<!-- Financial Reports -->
+			<Button
+                x:Name="ReportsButton"
+                Text="📊 View Financial Reports"
+                BackgroundColor="#172554"
+                TextColor="White"
+                CornerRadius="15"
+                HeightRequest="55"
+                FontSize="16"
+                FontAttributes="Bold"
+                Clicked="OnReportsClicked" />
 
 			<!-- Transaction History -->
 			<Label

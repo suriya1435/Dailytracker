@@ -31,7 +31,6 @@ public partial class MainPage : ContentPage
         _ = InitializeDashboardAsync();
     }
 
-    // Initialize the database and load saved transactions.
     private async Task InitializeDashboardAsync()
     {
         try
@@ -48,23 +47,25 @@ public partial class MainPage : ContentPage
         }
     }
 
-    // Add Expense button.
     private async void OnAddExpenseClicked(
-        object? sender,
-        EventArgs e)
+        object? sender, EventArgs e)
     {
         await AddTransactionAsync(false);
     }
 
-    // Add Income button.
     private async void OnAddIncomeClicked(
-        object? sender,
-        EventArgs e)
+        object? sender, EventArgs e)
     {
         await AddTransactionAsync(true);
     }
 
-    // Add a new income or expense transaction.
+    // Open Reports page.
+    private async void OnReportsClicked(
+        object? sender, EventArgs e)
+    {
+        await Navigation.PushModalAsync(new ReportsPage());
+    }
+
     private async Task AddTransactionAsync(bool isIncome)
     {
         string? amountText = await DisplayPromptAsync(
@@ -89,27 +90,23 @@ public partial class MainPage : ContentPage
                 "Invalid Amount",
                 "Enter a valid amount greater than zero.",
                 "OK");
-
             return;
         }
 
         string? category = await DisplayPromptAsync(
             isIncome ? "Income Category" : "Expense Category",
-            "Enter a category, such as Salary, Food or Travel:",
+            "Enter a category:",
             accept: "Continue",
-            cancel: "Cancel",
-            placeholder: isIncome ? "Salary" : "Food");
+            cancel: "Cancel");
 
         if (string.IsNullOrWhiteSpace(category))
             return;
 
-        // Notes are optional. Cancelling this prompt skips the notes.
         string? notes = await DisplayPromptAsync(
             "Transaction Notes",
             "Enter notes (optional):",
             accept: "Save",
-            cancel: "Skip",
-            placeholder: "Example: Monthly salary or lunch");
+            cancel: "Skip");
 
         try
         {
@@ -123,36 +120,28 @@ public partial class MainPage : ContentPage
             };
 
             await _database.SaveTransactionAsync(transaction);
-
-            // Reload transactions and recalculate the balance.
             await RefreshDashboardAsync();
 
             await DisplayAlertAsync(
                 "Success",
-                $"{(isIncome ? "Income" : "Expense")} saved successfully!",
+                "Transaction saved successfully!",
                 "OK");
         }
         catch (Exception ex)
         {
             await DisplayAlertAsync(
-                "Save Error",
-                $"Could not save the transaction.\n{ex.Message}",
-                "OK");
+                "Save Error", ex.Message, "OK");
         }
     }
 
-    // Reload all saved transactions from SQLite.
     private async Task RefreshDashboardAsync()
     {
         _allTransactions = await _database.GetTransactionsAsync();
-
         UpdateDashboard();
     }
 
-    // Update totals and display the filtered transaction list.
     private void UpdateDashboard()
     {
-        // Calculate totals using ALL transactions.
         decimal totalIncome = _allTransactions
             .Where(t => t.Type == "Income")
             .Sum(t => t.Amount);
@@ -161,24 +150,14 @@ public partial class MainPage : ContentPage
             .Where(t => t.Type == "Expense")
             .Sum(t => t.Amount);
 
-        // Available balance = income - expenses.
         decimal balance = totalIncome - totalExpenses;
 
-        // Update dashboard labels.
-        BalanceLabel.Text = balance.ToString(
-            "C2", _indianCulture);
+        BalanceLabel.Text = balance.ToString("C2", _indianCulture);
+        IncomeLabel.Text = totalIncome.ToString("C2", _indianCulture);
+        ExpenseLabel.Text = totalExpenses.ToString("C2", _indianCulture);
 
-        IncomeLabel.Text = totalIncome.ToString(
-            "C2", _indianCulture);
+        string searchText = SearchEntry.Text?.Trim() ?? string.Empty;
 
-        ExpenseLabel.Text = totalExpenses.ToString(
-            "C2", _indianCulture);
-
-        // Read search input.
-        string searchText = SearchEntry.Text?.Trim()
-            ?? string.Empty;
-
-        // Read the selected transaction filter.
         string selectedFilter =
             TypeFilterPicker.SelectedItem?.ToString()
             ?? "All Transactions";
@@ -186,7 +165,6 @@ public partial class MainPage : ContentPage
         IEnumerable<Transaction> filteredTransactions =
             _allTransactions;
 
-        // Apply income/expense filter.
         if (selectedFilter == "Income Only")
         {
             filteredTransactions = filteredTransactions
@@ -198,7 +176,6 @@ public partial class MainPage : ContentPage
                 .Where(t => t.Type == "Expense");
         }
 
-        // Search categories and notes without case sensitivity.
         if (!string.IsNullOrWhiteSpace(searchText))
         {
             filteredTransactions = filteredTransactions
@@ -215,7 +192,6 @@ public partial class MainPage : ContentPage
         List<Transaction> displayedTransactions =
             filteredTransactions.ToList();
 
-        // Clear the previous transaction cards.
         TransactionsLayout.Children.Clear();
 
         if (displayedTransactions.Count == 0)
@@ -234,14 +210,13 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        // Display each matching transaction.
         foreach (Transaction item in displayedTransactions)
         {
             AddTransactionCard(item);
         }
     }
 
-    // Create a card for an individual transaction.
+    // Create transaction card with Edit and Delete buttons.
     private void AddTransactionCard(Transaction item)
     {
         bool isIncome = item.Type == "Income";
@@ -251,7 +226,6 @@ public partial class MainPage : ContentPage
             Spacing = 4
         };
 
-        // Category.
         details.Children.Add(new Label
         {
             Text = item.Category,
@@ -260,18 +234,14 @@ public partial class MainPage : ContentPage
             FontSize = 15
         });
 
-        // Transaction date and time.
         details.Children.Add(new Label
         {
             Text = item.TransactionDate.ToString(
-                "dd MMM yyyy, hh:mm tt",
-                CultureInfo.CurrentCulture),
-
+                "dd MMM yyyy, hh:mm tt"),
             FontSize = 11,
             TextColor = Color.FromArgb("#8992A5")
         });
 
-        // Optional notes.
         if (!string.IsNullOrWhiteSpace(item.Notes))
         {
             details.Children.Add(new Label
@@ -282,7 +252,6 @@ public partial class MainPage : ContentPage
             });
         }
 
-        // Display income with + and expenses with -.
         Label amountLabel = new()
         {
             Text = $"{(isIncome ? "+" : "-")}" +
@@ -304,32 +273,197 @@ public partial class MainPage : ContentPage
                 new ColumnDefinition(GridLength.Star),
                 new ColumnDefinition(GridLength.Auto)
             },
-
-            ColumnSpacing = 12
+            ColumnSpacing = 8
         };
 
         transactionGrid.Add(details, 0, 0);
         transactionGrid.Add(amountLabel, 1, 0);
 
+        Button editButton = new()
+        {
+            Text = "✏ Edit",
+            BackgroundColor = Color.FromArgb("#2563EB"),
+            TextColor = Colors.White,
+            CornerRadius = 9,
+            HeightRequest = 40,
+            FontSize = 13,
+            HorizontalOptions = LayoutOptions.Fill
+        };
+
+        editButton.Clicked += async (sender, args) =>
+            await EditTransactionAsync(item);
+
+        Button deleteButton = new()
+        {
+            Text = "🗑 Delete",
+            BackgroundColor = Color.FromArgb("#DC2626"),
+            TextColor = Colors.White,
+            CornerRadius = 9,
+            HeightRequest = 40,
+            FontSize = 13,
+            HorizontalOptions = LayoutOptions.Fill
+        };
+
+        deleteButton.Clicked += async (sender, args) =>
+            await DeleteTransactionAsync(item);
+
+        Grid actionGrid = new()
+        {
+            ColumnDefinitions =
+            {
+                new ColumnDefinition(GridLength.Star),
+                new ColumnDefinition(GridLength.Star)
+            },
+            ColumnSpacing = 10
+        };
+
+        actionGrid.Add(editButton, 0, 0);
+        actionGrid.Add(deleteButton, 1, 0);
+
+        VerticalStackLayout cardContent = new()
+        {
+            Spacing = 12
+        };
+
+        cardContent.Children.Add(transactionGrid);
+        cardContent.Children.Add(actionGrid);
+
         Border card = new()
         {
             BackgroundColor = Colors.White,
             Stroke = Color.FromArgb("#E7EAF2"),
-
             StrokeShape = new RoundRectangle
             {
                 CornerRadius = new CornerRadius(14)
             },
-
             Padding = 14,
             Margin = new Thickness(0, 3),
-            Content = transactionGrid
+            Content = cardContent
         };
 
         TransactionsLayout.Children.Add(card);
     }
 
-    // Refresh the transaction list when the user searches.
+    // Edit an existing transaction.
+    private async Task EditTransactionAsync(Transaction item)
+    {
+        try
+        {
+            string? amountText = await DisplayPromptAsync(
+                "Edit Amount",
+                "Enter the updated amount:",
+                accept: "Continue",
+                cancel: "Cancel",
+                initialValue: item.Amount.ToString(
+                    CultureInfo.InvariantCulture),
+                keyboard: Keyboard.Numeric);
+
+            if (amountText == null)
+                return;
+
+            if (!decimal.TryParse(
+                amountText.Trim(),
+                NumberStyles.Number,
+                CultureInfo.InvariantCulture,
+                out decimal amount) || amount <= 0)
+            {
+                await DisplayAlertAsync(
+                    "Invalid Amount",
+                    "Enter a valid amount greater than zero.",
+                    "OK");
+                return;
+            }
+
+            string? category = await DisplayPromptAsync(
+                "Edit Category",
+                "Enter the updated category:",
+                accept: "Continue",
+                cancel: "Cancel",
+                initialValue: item.Category);
+
+            if (category == null)
+                return;
+
+            if (string.IsNullOrWhiteSpace(category))
+            {
+                await DisplayAlertAsync(
+                    "Invalid Category",
+                    "Category cannot be empty.",
+                    "OK");
+                return;
+            }
+
+            string? notes = await DisplayPromptAsync(
+                "Edit Notes",
+                "Enter updated notes:",
+                accept: "Save",
+                cancel: "Cancel",
+                initialValue: item.Notes ?? string.Empty);
+
+            if (notes == null)
+                return;
+
+            item.Amount = amount;
+            item.Category = category.Trim();
+            item.Notes = notes.Trim();
+
+            await _database.SaveTransactionAsync(item);
+            await RefreshDashboardAsync();
+
+            await DisplayAlertAsync(
+                "Updated",
+                "Transaction updated successfully!",
+                "OK");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync(
+                "Update Error", ex.Message, "OK");
+        }
+    }
+
+    // Delete an existing transaction.
+    private async Task DeleteTransactionAsync(Transaction item)
+    {
+        bool confirm = await DisplayAlertAsync(
+            "Confirm Delete",
+            $"Are you sure you want to delete this transaction?\n\n" +
+            $"{item.Category} - {item.Amount.ToString("C2", _indianCulture)}",
+            "Delete",
+            "Cancel");
+
+        if (!confirm)
+            return;
+
+        try
+        {
+            int deletedRows =
+                await _database.DeleteTransactionAsync(item.Id);
+
+            if (deletedRows > 0)
+            {
+                await RefreshDashboardAsync();
+
+                await DisplayAlertAsync(
+                    "Deleted",
+                    "Transaction deleted successfully!",
+                    "OK");
+            }
+            else
+            {
+                await DisplayAlertAsync(
+                    "Not Found",
+                    "This transaction could not be found.",
+                    "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync(
+                "Delete Error", ex.Message, "OK");
+        }
+    }
+
     private void OnSearchTextChanged(
         object? sender,
         TextChangedEventArgs e)
@@ -337,7 +471,6 @@ public partial class MainPage : ContentPage
         UpdateDashboard();
     }
 
-    // Refresh the transaction list when the filter changes.
     private void OnFilterChanged(
         object? sender,
         EventArgs e)

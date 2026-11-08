@@ -1,0 +1,77 @@
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="DailyTrack.ReportsPage"
+    Title="Reports"
+    BackgroundColor="#F4F6FB">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <Label
+                Text="Financial Reports"
+                FontSize="26"
+                FontAttributes="Bold"
+                TextColor="#172554" />
+
+            <Label
+                Text="Select a date range to generate your report."
+                FontSize="14"
+                TextColor="Gray" />
+
+            <Border
+                BackgroundColor="White"
+                Stroke="#E5E7EB"
+                StrokeShape="RoundRectangle 15"
+                Padding="15">
+
+                <VerticalStackLayout Spacing="15">
+
+                    <Label
+                        Text="Start Date"
+                        FontAttributes="Bold"
+                        TextColor="#172554" />
+
+                    <DatePicker
+                        x:Name="StartDatePicker"
+                        Format="dd MMM yyyy" />
+
+                    <Label
+                        Text="End Date"
+                        FontAttributes="Bold"
+                        TextColor="#172554" />
+
+                    <DatePicker
+                        x:Name="EndDatePicker"
+                        Format="dd MMM yyyy" />
+
+                </VerticalStackLayout>
+            </Border>
+
+            <Button
+                Text="Download Excel Report"
+                BackgroundColor="#16834A"
+                TextColor="White"
+                CornerRadius="12"
+                HeightRequest="52"
+                Clicked="OnDownloadExcelClicked" />
+
+            <Button
+                Text="Download PDF Report"
+                BackgroundColor="#D94343"
+                TextColor="White"
+                CornerRadius="12"
+                HeightRequest="52"
+                Clicked="OnDownloadPdfClicked" />
+
+            <Button
+                Text="Share Report on WhatsApp"
+                BackgroundColor="#168B55"
+                TextColor="White"
+                CornerRadius="12"
+                HeightRequest="52"
+                Clicked="OnShareWhatsAppClicked" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
